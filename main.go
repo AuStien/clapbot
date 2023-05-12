@@ -53,15 +53,15 @@ func main() {
 			return
 		}
 
+		user, err := api.GetUserInfo(s.UserID)
+		if err != nil {
+			fmt.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
 		switch s.Command {
 		case "/clap":
-			user, err := api.GetUserInfo(s.UserID)
-			if err != nil {
-				fmt.Println(err)
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-
 			_, _, err = api.PostMessage(s.ChannelID,
 				slack.MsgOptionUsername(user.RealName),
 				slack.MsgOptionIconURL(user.Profile.ImageOriginal),
@@ -74,13 +74,6 @@ func main() {
 
 			w.WriteHeader(200)
 		case "/randomcase":
-			user, err := api.GetUserInfo(s.UserID)
-			if err != nil {
-				fmt.Println(err)
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-
 			_, _, err = api.PostMessage(s.ChannelID,
 				slack.MsgOptionUsername(user.RealName),
 				slack.MsgOptionIconURL(user.Profile.ImageOriginal),
@@ -140,3 +133,4 @@ func randomCase(text string, seed int64) string {
 	}
 	return newText
 }
+
