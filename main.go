@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"os"
+	"strings"
+	"time"
 	"unicode"
 
 	log "github.com/sirupsen/logrus"
@@ -70,6 +73,25 @@ func main() {
 			}
 
 			w.WriteHeader(200)
+		case "/randomcase":
+			user, err := api.GetUserInfo(s.UserID)
+			if err != nil {
+				fmt.Println(err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+
+			_, _, err = api.PostMessage(s.ChannelID,
+				slack.MsgOptionUsername(user.RealName),
+				slack.MsgOptionIconURL(user.Profile.ImageOriginal),
+				slack.MsgOptionText(randomCase(s.Text, time.Now().Unix()), true))
+			if err != nil {
+				fmt.Println(err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+
+			w.WriteHeader(200)
 		default:
 			fmt.Println("unknown command")
 			w.WriteHeader(http.StatusInternalServerError)
@@ -101,5 +123,20 @@ func addClap(text string) string {
 		}
 	}
 
+	return newText
+}
+
+func randomCase(text string, seed int64) string {
+	rand.Seed(seed)
+	newText := ""
+	for _, s := range text {
+		randInt := rand.Intn(2)
+
+		if randInt == 0 {
+			newText = fmt.Sprintf("%s%s", newText, strings.ToUpper(string(s)))
+		} else {
+			newText = fmt.Sprintf("%s%s", newText, string(s))
+		}
+	}
 	return newText
 }
